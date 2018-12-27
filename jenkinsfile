@@ -1,0 +1,77 @@
+/* This script is designed and maintained by Ganesh Palnitkar
+*/
+def notify(status) {
+  mail (
+        body:"""${status}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]':
+                 Check console output at,
+                 href='${env.BUILD_URL}'>${env.JOB_NAME} [${env.BUILD_NUMBER}]""",
+        subject: """JenkinsNotification: ${status}:""",
+        to: 'mahadev.bhanwar4u@gmail.com'
+       )
+ }
+def server = Artifactory.server 'Artifactory'
+def uploadSpec = """{
+  "files": [
+	{
+	  "pattern": "feature1/Helloworldwebapp.war",
+	  "target": "feature1/"
+	}
+		   ]
+  }"""
+
+/*def downloadSpec = """{
+ "files": [
+  {
+      "pattern": "feature1/*.war",
+      "target": "./"
+    }
+ ]
+}"""
+*/
+pipeline {
+ agent none
+    stages {
+      stage('SCM_Chekout') {
+          agent { label "master" }
+			steps {
+			    script {
+					notify('build-started')
+				}
+                checkout([$class: 'GitSCM',
+                    branches: [[name: '*/master']],
+                    doGenerateSubmoduleConfigurations: false,
+                    extensions: [],
+                    submoduleCfg: [],
+                    userRemoteConfigs: [[url: 'https://github.com/MahadevJangir/helloworld.git']]])
+            }
+        }
+      stage('Build'){
+          agent { label "master" }
+			steps {
+                sh 'mvn -f pom.xml clean package'
+            }
+        }
+
+	  stage('push-to-artifactory') {
+          agent { label "master" }
+			steps {
+                script {
+				   server.upload(uploadSpec)
+            }
+        }
+	}
+	  stage('Deploy') {
+          agent { label "buildser" }
+			steps {
+			    script {
+				  input('Deploy Package to Production?')
+				  notify('Deployment-to-Production')
+				}
+					sh 'wget http://104.196.59.24:8081/artifactory/feature1/Helloworldwebapp.war'
+					sh 'cp ./Helloworldwebapp.war /opt/tomcat/webapps/'
+					sh '/opt/tomcat/bin/catalina.sh run'
+
+            }
+         }
+    }
+}
