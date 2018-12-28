@@ -13,7 +13,7 @@ def server = Artifactory.server 'Artifactory'
 def uploadSpec = """{
   "files": [
 	{
-	  "pattern": "feature1/Helloworldwebapp.war",
+	  "pattern": "target/Helloworldwebapp.war",
 	  "target": "feature1/"
 	}
 		   ]
