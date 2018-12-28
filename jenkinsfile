@@ -6,7 +6,7 @@ def notify(status) {
                  Check console output at,
                  href='${env.BUILD_URL}'>${env.JOB_NAME} [${env.BUILD_NUMBER}]""",
         subject: """JenkinsNotification: ${status}:""",
-        to: 'divakar.rastodi@gmail.com'
+        to: 'mahadev.bhanwar4u@gmail.com'
        )
  }
 def server = Artifactory.server 'Artifactory'
